@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bible Verse of the Day</title>
+  <style>
+    :root {
+      --primary: #4a90e2;
+      --secondary: #f1f1f1;
+      --text: #333;
+      --accent: #007bff;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--secondary);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .app-container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      max-width: 500px;
+      width: 100%;
+      padding: 24px;
+      box-sizing: border-box;
+      text-align: center;
+      position: relative;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      font-size: 1.4em;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 1em;
+      font-weight: normal;
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    canvas#verse-canvas {
+      width: 100%;
+      max-width: 500px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 6px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #222;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-size: 0.9em;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Banner ads styling */
+    .banner-ads {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .banner-ads > div {
+      margin: 10px 0;
+      text-align: center;
+    }
+
+    .banner-ads iframe {
+      max-width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <h1 id="verse-title">Bible Verse Of The Day</h1>
+    <h2 id="verse-subtitle">Loading verse...</h2>
+    <canvas id="verse-canvas"></canvas>
+    <div class="buttons">
+      <button onclick="generateVerseImage()">🔄 New Verse</button>
+      <button onclick="downloadImage()">⬇️ Download Image</button>
+      <button onclick="shareImage()">📤 Share Image</button>
+    </div>
+
+    <!-- Banner Ads -->
+    <div class="banner-ads">
+      <!-- Classic Banner -->
+      <div class="banner-classic">
+        <script type="text/javascript">
+          atOptions = {
+            'key' : '3fcf2237ab3c7796108f33a1522ae5f5',
+            'format' : 'iframe',
+            'height' : 60,
+            'width' : 468,
+            'params' : {}
+          };
+        </script>
+        <script type="text/javascript" src="//www.highperformanceformat.com/3fcf2237ab3c7796108f33a1522ae5f5/invoke.js"></script>
+      </div>
+
+      <!-- Native Banner -->
+      <div class="banner-native">
+        <script async="async" data-cfasync="false" src="//pl27523297.effectivecpmrate.com/4a6d683f02e3d8f3a07f228ed76f271c/invoke.js"></script>
+        <div id="container-4a6d683f02e3d8f3a07f228ed76f271c"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">Copied!</div>
+
+  <script>
+    const PEXELS_API_KEY = "6VWwmD5hmbughYr9dzcyF1kTQhZHsnmM66HpGE3hPp22s8lDjFDqoGwU";
+    const canvas = document.getElementById("verse-canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = 500;
+    canvas.height = 500;
+
+    let currentVerseText = "";
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2500);
+    }
+
+    async function fetchVerseText() {
+      const subtitle = document.getElementById("verse-subtitle");
+
+      subtitle.innerText = "Loading new verse...";
+
+      try {
+        const res = await fetch("https://beta.ourmanna.com/api/v1/get/?format=json&order=random");
+        const data = await res.json();
+
+        const verse = data.verse.details.text;
+        const reference = data.verse.details.reference;
+
+        currentVerseText = `${verse} — ${reference}`;
+        document.getElementById("verse-title").innerText = "Bible Verse Of The Day";
+        document.getElementById("verse-subtitle").innerText = reference;
+
+        return currentVerseText;
+      } catch (e) {
+        subtitle.innerText = "Error loading verse";
+        return null;
+      }
+    }
+
+    async function fetchRandomImage() {
+      const res = await fetch("https://api.pexels.com/v1/search?query=landscape&per_page=50&orientation=square", {
+        headers: { Authorization: PEXELS_API_KEY }
+      });
+      const data = await res.json();
+      const photos = data.photos;
+      const random = photos[Math.floor(Math.random() * photos.length)];
+      return random.src.large;
+    }
+
+    function wrapTextCentered(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = text.split(" ");
+      let line = "";
+      const lines = [];
+
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + " ";
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && n > 0) {
+          lines.push(line);
+          line = words[n] + " ";
+        } else {
+          line = testLine;
+        }
+      }
+      lines.push(line);
+
+      const totalHeight = lines.length * lineHeight;
+      let startY = y - totalHeight / 2;
+
+      for (let i = 0; i < lines.length; i++) {
+        ctx.fillText(lines[i], x, startY + (i * lineHeight));
+      }
+    }
+
+    async function generateVerseImage() {
+      ctx.fillStyle = "#ddd";
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle = "#333";
+      ctx.font = "20px Segoe UI";
+      ctx.fillText("Loading...", 200, 250);
+
+      const verseText = await fetchVerseText();
+      if (!verseText) return;
+
+      const imgUrl = await fetchRandomImage();
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = imgUrl;
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = "rgba(0,0,0,0.4)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = "#fff";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = "bold 24px Segoe UI";
+
+        wrapTextCentered(ctx, verseText, canvas.width / 2, canvas.height / 2, canvas.width - 60, 34);
+      };
+    }
+
+    function downloadImage() {
+      const link = document.createElement("a");
+      link.download = "verse-image.png";
+      link.href = canvas.toDataURL("image/png");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    async function shareImage() {
+      if (navigator.share && navigator.canShare) {
+        canvas.toBlob(async (blob) => {
+          const file = new File([blob], "verse.png", { type: "image/png" });
+          if (navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({
+                files: [file],
+                title: "Bible Verse",
+                text: "Check out this verse!"
+              });
+            } catch (err) {
+              console.log("Share cancelled or failed.");
+            }
+          } else {
+            alert("Sharing not supported on this device.");
+          }
+        });
+      } else {
+        alert("Sharing not supported on this browser.");
+      }
+    }
+
+    // Load first verse and image
+    generateVerseImage();
+  </script>
+</body>
+</html>
